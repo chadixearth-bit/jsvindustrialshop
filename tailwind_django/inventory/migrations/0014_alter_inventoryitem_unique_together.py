@@ -5,7 +5,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("inventory", "0013_inventoryitem_last_updated"),
+        ("inventory", "0013_inventoryitem_warehouse"),
     ]
 
     operations = [

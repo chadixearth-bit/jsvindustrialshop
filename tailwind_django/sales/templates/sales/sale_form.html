@@ -75,7 +75,7 @@
                                 <p class="text-sm font-medium text-gray-900">{{ item.item_name }}</p>
                                 <p class="text-sm text-gray-500">{{ item.brand.name }} - {{ item.model }}</p>
                                 <p class="text-sm text-gray-500">Stock: {{ item.stock }}</p>
-                                <p class="text-sm font-medium text-gray-900">Price: ${{ item.price }}</p>
+                                <p class="text-sm font-medium text-gray-900">Price: ₱{{ item.price }}</p>
                             </div>
                             <button type="button" 
                                     onclick="addItem('{{ item.id }}', '{{ item.item_name }}', {{ item.price }}, {{ item.stock }})"
@@ -121,7 +121,7 @@
                                     <p class="text-sm font-medium text-gray-900">{{ rec.item.item_name }}</p>
                                     <p class="text-sm text-gray-500">{{ rec.item.brand.name }} - {{ rec.item.model }}</p>
                                     <p class="text-sm text-gray-500">Stock: {{ rec.item.stock }}</p>
-                                    <p class="text-sm font-medium text-gray-900">Price: ${{ rec.item.price }}</p>
+                                    <p class="text-sm font-medium text-gray-900">Price: ₱{{ rec.item.price }}</p>
                                     <div class="mt-1 flex items-center">
                                         <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
                                             {{ rec.count }} customers bought this together
@@ -253,11 +253,11 @@
                                min="1" 
                                class="w-16 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                                onchange="updateQuantity('${itemId}', this.value, ${item.price})">
-                        <span class="ml-2 text-sm text-gray-500">× $${item.price}</span>
+                        <span class="ml-2 text-sm text-gray-500">× ₱${item.price}</span>
                     </div>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-900">$${item.total.toFixed(2)}</p>
+                    <p class="text-sm font-medium text-gray-900">₱${item.total.toFixed(2)}</p>
                     <button onclick="removeItem('${itemId}')" 
                             class="mt-1 text-sm text-red-600 hover:text-red-800">Remove</button>
                 </div>
@@ -281,7 +281,7 @@
 
     function updateTotalPrice() {
         totalPrice = Object.values(selectedItems).reduce((sum, item) => sum + item.total, 0);
-        document.getElementById('total-price').textContent = `$${totalPrice.toFixed(2)}`;
+        document.getElementById('total-price').textContent = `₱${totalPrice.toFixed(2)}`;
     }
 
     // Initialize the display

@@ -11,7 +11,7 @@ from io import BytesIO
 from .models import Requisition, Notification, RequisitionItem, Delivery, DeliveryItem, RequisitionStatusHistory
 from .forms import RequisitionForm, RequisitionApprovalForm, DeliveryManagementForm, DeliveryConfirmationForm
 from inventory.models import InventoryItem, Warehouse, Brand, Category
-from purchasing.models import PendingPOItem
+from purchasing.models import PendingPOItem, PurchaseOrder
 import json
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -122,10 +122,11 @@ def requisition_list(request):
         # 2. Requisitions that have been forwarded to admin
         # 3. Requisitions they've previously handled
         # 4. Rejected requisitions from managers
+        # 5. Requisitions pending delivery
         requisitions = requisitions.filter(
             Q(status='pending_admin_approval') |
             Q(status='forwarded_to_admin') |
-            Q(status__in=['approved_by_admin', 'pending_po', 'rejected', 'rejected_by_admin']) |
+            Q(status__in=['approved_by_admin', 'pending_po', 'rejected', 'rejected_by_admin', 'pending_delivery']) |
             Q(notifications__user=request.user)  # Requisitions they've been involved with
         ).distinct()
     else:
@@ -693,17 +694,26 @@ def approve_requisition(request, pk):
                         )
                 
                 # Update requisition status
-                requisition.status = 'approved'
+                requisition.status = 'pending_delivery'  # Changed from 'approved' to 'pending_delivery'
                 requisition.approved_by = request.user
                 requisition.approved_at = timezone.now()
                 requisition.approval_comment = comment
                 requisition.save()
                 
+                # Create PendingPOItems for unavailable items
+                for item_info in unavailable_items:
+                    req_item = item_info['item']
+                    PendingPOItem.objects.create(
+                        brand=req_item.item.brand,
+                        item=req_item,
+                        quantity=req_item.quantity
+                    )
+                
                 # Notify requester
                 Notification.objects.create(
                     user=requisition.requester,
                     requisition=requisition,
-                    message=f'Your requisition has been approved by admin.'
+                    message=f'Your requisition has been approved by admin and is now pending delivery.'  # Updated message
                 )
             
             messages.success(request, 'Requisition processed successfully.')
@@ -1981,17 +1991,26 @@ def admin_approve_requisition(request, pk):
                         )
                 
                 # Update requisition status
-                requisition.status = 'approved'
+                requisition.status = 'pending_delivery'  # Changed from 'approved' to 'pending_delivery'
                 requisition.approved_by = request.user
                 requisition.approved_at = timezone.now()
                 requisition.approval_comment = comment
                 requisition.save()
                 
+                # Create PendingPOItems for unavailable items
+                for item_info in unavailable_items:
+                    req_item = item_info['item']
+                    PendingPOItem.objects.create(
+                        brand=req_item.item.brand,
+                        item=req_item,
+                        quantity=req_item.quantity
+                    )
+                
                 # Notify requester
                 Notification.objects.create(
                     user=requisition.requester,
                     requisition=requisition,
-                    message=f'Your requisition has been approved by admin.'
+                    message=f'Your requisition has been approved by admin and is now pending delivery.'  # Updated message
                 )
             
             messages.success(request, 'Requisition processed successfully.')
