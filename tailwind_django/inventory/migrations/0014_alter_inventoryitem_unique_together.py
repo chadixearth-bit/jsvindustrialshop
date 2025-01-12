@@ -2,6 +2,20 @@
 
 from django.db import migrations
 
+def handle_duplicates(apps, schema_editor):
+    # Use raw SQL to delete duplicates, keeping only the one with the minimum ID
+    schema_editor.execute("""
+        WITH duplicates AS (
+            SELECT id,
+                   ROW_NUMBER() OVER (PARTITION BY brand_id, model, warehouse_id ORDER BY id) as row_num
+            FROM inventory_inventoryitem
+        )
+        DELETE FROM inventory_inventoryitem
+        WHERE id IN (
+            SELECT id FROM duplicates WHERE row_num > 1
+        );
+    """)
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -12,5 +26,10 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name="inventoryitem",
             unique_together=set(),  # Remove any existing unique_together constraints
+        ),
+        migrations.RunPython(handle_duplicates),
+        migrations.AlterUniqueTogether(
+            name="inventoryitem",
+            unique_together={("brand", "model", "warehouse")},
         ),
     ]
