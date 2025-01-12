@@ -5,12 +5,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("inventory", "0013_inventoryitem_last_updated"),
+        ("inventory", "0015_handle_duplicates"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
             name="inventoryitem",
-            unique_together=set(),  # Remove any existing unique_together constraints
+            unique_together={("brand", "model", "warehouse")},
         ),
     ]
