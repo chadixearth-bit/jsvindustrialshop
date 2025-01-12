@@ -41,22 +41,28 @@ def generate_sale_receipt(sale):
     
     story.append(Paragraph(f"Transaction ID: {sale.transaction_id}", receipt_style))
     story.append(Paragraph(f"Date: {sale.sale_date.strftime('%Y-%m-%d %H:%M:%S')}", receipt_style))
-    story.append(Paragraph(f"Buyer: {sale.buyer.first_name}", receipt_style))
-    story.append(Paragraph(f"Sold by: {sale.sold_by.username}", receipt_style))
+    
+    # Handle buyer name safely
+    buyer_name = f"{sale.buyer.first_name} {sale.buyer.last_name}" if sale.buyer else "Walk-in Customer"
+    story.append(Paragraph(f"Buyer: {buyer_name}", receipt_style))
+    
+    # Handle sold_by safely
+    sold_by = sale.sold_by.username if sale.sold_by else "System"
+    story.append(Paragraph(f"Sold by: {sold_by}", receipt_style))
     story.append(Spacer(1, 20))
 
     # Create items table
     table_data = [['Item', 'Quantity', 'Price/Unit', 'Total']]
     for sale_item in sale.items.all():
         table_data.append([
-            sale_item.item.item_name if sale_item.item else 'Unknown Item',
+            sale_item.item.model,
             str(sale_item.quantity),
-            f"${sale_item.price_per_unit:.2f}",
-            f"${sale_item.total_price:.2f}"
+            f"₱{sale_item.price_per_unit:.2f}",
+            f"₱{sale_item.total_price:.2f}"
         ])
     
     # Add total row
-    table_data.append(['', '', 'Total:', f"${sale.total_price:.2f}"])
+    table_data.append(['', '', 'Total:', f"₱{sale.total_price:.2f}"])
 
     # Create and style the table
     table = Table(table_data, colWidths=[4*inch, 1*inch, 1.25*inch, 1.25*inch])
