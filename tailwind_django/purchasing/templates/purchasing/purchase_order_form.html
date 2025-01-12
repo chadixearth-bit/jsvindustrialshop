@@ -207,9 +207,21 @@
     function addNewRow(brand = '', itemName = '', model = '', quantity = '', unitPrice = '') {
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${brand}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${itemName}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${model}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <input type="text" value="${brand}" 
+                    class="brand-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    placeholder="Enter brand">
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <input type="text" value="${itemName}" 
+                    class="item-name-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    placeholder="Enter item name">
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                <input type="text" value="${model}" 
+                    class="model-input block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                    placeholder="Enter model">
+            </td>
             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                 <input type="number" value="${quantity}" min="1" 
                     class="quantity-input block w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
@@ -254,9 +266,9 @@
         const items = [];
         for (let row of rows) {
             const item = {
-                brand: row.cells[0].textContent,
-                item_name: row.cells[1].textContent,
-                model: row.cells[2].textContent,
+                brand: row.querySelector('.brand-input').value,
+                item_name: row.querySelector('.item-name-input').value,
+                model: row.querySelector('.model-input').value,
                 quantity: parseInt(row.querySelector('.quantity-input').value) || 0,
                 unit_price: parseFloat(row.querySelector('.price-input').value) || 0
             };
@@ -348,9 +360,9 @@
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
             const item = {
-                brand: row.cells[0].textContent,
-                item_name: row.cells[1].textContent,
-                model: row.cells[2].textContent,
+                brand: row.querySelector('.brand-input').value,
+                item_name: row.querySelector('.item-name-input').value,
+                model: row.querySelector('.model-input').value,
                 quantity: parseInt(row.querySelector('.quantity-input').value),
                 unit_price: parseFloat(row.querySelector('.price-input').value)
             };
