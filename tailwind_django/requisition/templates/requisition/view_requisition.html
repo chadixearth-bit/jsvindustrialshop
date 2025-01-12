@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block main_content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-4 px-2 sm:px-4 lg:px-6">
+    <div class="w-full max-w-[1920px] mx-auto">
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="px-4 py-5 sm:p-6">
+                <!-- Header with Logo and Company Info -->
+                <div class="flex justify-between items-start mb-8">
+                    <div class="space-y-2">
+                        <h2 class="text-gray-600">#54 Jakosalem St. Brgy Santo Niño 6000</h2>
+                        <p class="text-gray-600">Cebu City, Philippines, 6000</p>
+                        <p class="text-gray-600">Phone: 0000-000-0000</p>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <img src="{% static 'css/dist/images/jsv_logo_black.png' %}" alt="JSV Logo" class="h-16 mb-2">
+                        <p class="text-sm text-gray-600 font-semibold">JSV Industrial</p>
+                        <p class="text-sm text-gray-600">Equipment Trading</p>
+                    </div>
+                </div>
+
+                <!-- Requisition Title -->
+                <div class="border-b border-gray-200 pb-4 mb-6">
+                    <h1 class="text-2xl font-bold">Requisition Form</h1>
+                </div>
+
+                <!-- Basic Information -->
+                <div class="grid grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <p class="text-sm text-gray-600">Invoice Date:</p>
+                        <p class="font-semibold">{{ requisition.created_at|date:"d/m/Y" }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Requested by:</p>
+                        <p class="font-semibold">{{ requisition.requester.customuser.display_name|default:requisition.requester.get_full_name|default:requisition.requester.username }}</p>
+                    </div>
+                </div>
+
+                <!-- Status Badge -->
+                <div class="mb-6">
+                    <span class="px-3 py-1 text-sm font-semibold rounded-full 
+                        {% if requisition.status == 'pending' %}
+                            bg-yellow-100 text-yellow-800
+                        {% elif requisition.status == 'pending_admin_approval' %}
+                            bg-yellow-100 text-yellow-800
+                        {% elif requisition.status == 'approved' %}
+                            bg-green-100 text-green-800
+                        {% elif requisition.status == 'rejected' %}
+                            bg-red-100 text-red-800
+                        {% else %}
+                            bg-gray-100 text-gray-800
+                        {% endif %}">
+                        {{ requisition.get_status_display }}
+                    </span>
+                </div>
+
+                <!-- Warehouse Information -->
+                <div class="mb-8">
+                    <div>
+                        <p class="text-sm text-gray-600">Destination Warehouse:</p>
+                        <p class="font-semibold">{{ requisition.destination_warehouse.name }}</p>
+                    </div>
+                </div>
+
+                <!-- Requested Items Table -->
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium mb-4">Requested Items:</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 rounded-lg">
+                            <thead class="bg-gray-800">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase">Item Description</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase">Brand</th>
+                                    <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase">Model</th> -->
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-white uppercase">Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                {% for item in requisition.items.all %}
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.item.item_name }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.item.brand.name|default:"-" }}</td>
+                                    <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.item.model_name|default:"-" }}</td> -->
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.quantity }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-8 flex justify-end space-x-4">
+                    <a href="{% url 'requisition:requisition_list' %}" 
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Back to List
+                    </a>
+                    {% if user_role == 'manager' and requisition.status == 'pending' and requisition.requester.customuser.role == 'attendant' %}
+                        <a href="{% url 'requisition:approve_requisition' requisition.id %}" 
+                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Review
+                        </a>
+                    {% elif user_role == 'admin' and requisition.status == 'pending_admin' %}
+                        <a href="{% url 'requisition:admin_approve_requisition' requisition.id %}"
+                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Review and Create PO
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

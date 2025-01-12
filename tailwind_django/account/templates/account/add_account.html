@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block main_content %}
+<div class="min-h-screen bg-gray-50 py-2">
+    <div class="max-w-xl mx-auto p-6 bg-white rounded-lg shadow-lg mt-6 mb-6">
+        <div class="px-4 mt-4 flex items-center">
+            <h2 class="text-2xl font-bold text-gray-800">Add New Account</h2>
+        </div>
+
+        <div class="px-4">        
+            <form class="space-y-4" method="POST">
+                {% csrf_token %}
+                {{ form|crispy }}
+                <div class="mt-8">
+                    <button type="submit" class="w-full py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-[#121221] hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                        Add Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Style form inputs */
+    .form-control {
+        @apply w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    }
+    
+    /* Adjust crispy form labels */
+    .asteriskField {
+        @apply text-red-500 ml-1;
+    }
+    
+    .form-group {
+        @apply mb-4;
+    }
+    
+    .help-block {
+        @apply text-sm text-gray-600 mt-1;
+    }
+</style>
+{% endblock %}

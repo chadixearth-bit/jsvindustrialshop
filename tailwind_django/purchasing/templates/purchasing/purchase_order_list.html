@@ -1,0 +1,359 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block main_content %}
+<div class="py-6">
+    <div class="max-w-7xl mx-auto sm:px-4 lg:px-8">
+        <div class="min-h-screen bg-gray-50 py-2 sm:px-4 lg:px-2">
+            <!-- Page Header -->
+            <div class="mb-8 bg-white rounded-2xl shadow-lg transform hover:scale-[1.02] transition-transform duration-300">
+                <div class="px-6 py-8 sm:px-8">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-2xl sm:text-3xl font-bold text-black">Purchase Orders</h1>
+                            <p class="mt-2 text-gray-600text-sm sm:text-base">
+                                Manage and track your purchase orders
+                            </p>
+                        </div>
+                        {% if request.user.is_superuser or request.user.customuser.role == 'admin' %}
+                        <div class="flex space-x-4">
+                            <a href="{% url 'purchasing:create_purchase_order' %}" 
+                               class="inline-flex items-center px-4 py-2.5 bg-indigo-100 text-indigo-600 rounded-lg shadow-md hover:bg-indigo-50 transition-all duration-200 font-medium">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Create Purchase Order
+                            </a>
+                            <a href="{% url 'purchasing:add_supplier' %}" 
+                               class="inline-flex items-center px-4 py-2.5 bg-green-100 text-green-600 rounded-lg shadow-md hover:bg-green-50 transition-all duration-200 font-medium">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Add Supplier
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Main Purchase Orders List -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h2 class="text-lg font-semibold text-gray-900">Recent Purchase Orders</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PO Number</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Amount</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    {% if purchase_orders %}
+                                        {% for order in purchase_orders %}
+                                        <tr class="hover:bg-gray-50 transition-colors duration-200">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ order.po_number }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ order.supplier.name }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap">
+                                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                    {% if order.status == 'draft' %}bg-gray-100 text-gray-800
+                                                    {% elif order.status == 'pending_supplier' %}bg-yellow-100 text-yellow-800
+                                                    {% elif order.status == 'supplier_accepted' %}bg-green-100 text-green-800
+                                                    {% elif order.status == 'supplier_rejected' %}bg-red-100 text-red-800
+                                                    {% elif order.status == 'confirmed' %}bg-blue-100 text-blue-800
+                                                    {% elif order.status == 'in_transit' %}bg-purple-100 text-purple-800
+                                                    {% elif order.status == 'delivered' %}bg-indigo-100 text-indigo-800
+                                                    {% elif order.status == 'completed' %}bg-green-100 text-green-800
+                                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                                    {{ order.get_status_display }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">₱{{ order.total_amount|floatformat:2 }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                                <a href="{% url 'purchasing:view_purchase_order' order.id %}" 
+                                                   class="text-indigo-600 hover:text-indigo-900">View</a>
+                                                {% if order.status == 'draft' or order.status == 'pending_supplier' %}
+                                                <a href="{% url 'purchasing:edit_purchase_order' order.id %}" 
+                                                   class="text-blue-600 hover:text-blue-900">Edit</a>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <tr>
+                                            <td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                                                No purchase orders found
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar with Approved Requisitions -->
+                <div class="lg:col-span-1">
+                    {% if pending_requisitions_by_brand %}
+                    <div id="pendingItemsContainer" class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-500 to-green-600">
+                            <h3 class="text-lg font-semibold text-white">Pending Requisitions for Purchase Orders</h3>
+                        </div>
+                        <div class="divide-y divide-gray-200">
+                            {% for brand, items in pending_requisitions_by_brand.items %}
+                            <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+                                <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-blue-600">
+                                    <h3 class="text-lg font-semibold text-white">{{ brand }}</h3>
+                                </div>
+                                <div class="divide-y divide-gray-200">
+                                    <!-- Items List -->
+                                    <div class="p-4">
+                                        <div class="space-y-4">
+                                            <table class="min-w-full divide-y divide-gray-200">
+                                                <thead class="bg-gray-50">
+                                                    <tr>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requisition #</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Requester</th>
+                                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-gray-200">
+                                                    {% for item in items %}
+                                                    <tr class="hover:bg-gray-50">
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ item.item.item.item_name }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.item.item.model }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.quantity }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">#{{ item.item.requisition.id }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.item.requisition.requester }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.item.requisition.created_at|date:"M d, Y" }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <!-- Create PO Actions -->
+                                    <div class="p-4 bg-gray-50">
+                                        <form id="po_form_{{ brand }}" class="space-y-4">
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label for="supplier_{{ brand }}" class="block text-sm font-medium text-gray-700">Supplier</label>
+                                                    <select id="supplier_{{ brand }}" name="supplier" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                                        <option value="">Select a supplier</option>
+                                                        {% for supplier in suppliers %}
+                                                        <option value="{{ supplier.id }}">{{ supplier.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label for="warehouse_{{ brand }}" class="block text-sm font-medium text-gray-700">Warehouse</label>
+                                                    <select id="warehouse_{{ brand }}" name="warehouse" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                                        <option value="">Select a warehouse</option>
+                                                        {% for warehouse in warehouses %}
+                                                        <option value="{{ warehouse.id }}">{{ warehouse.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label for="expected_delivery_date_{{ brand }}" class="block text-sm font-medium text-gray-700">Expected Delivery Date</label>
+                                                <input type="date" id="expected_delivery_date_{{ brand }}" name="expected_delivery_date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                            </div>
+                                            <div>
+                                                <label for="notes_{{ brand }}" class="block text-sm font-medium text-gray-700">Notes</label>
+                                                <textarea id="notes_{{ brand }}" name="notes" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                                            </div>
+                                            <div class="flex justify-between items-center">
+                                                <button type="button" onclick="createPurchaseOrder('{{ brand }}')" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                    Create Purchase Order
+                                                </button>
+                                                <button type="button" onclick="clearBrandItems('{{ brand }}')" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                                    Clear Items
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to refresh pending items section
+        function refreshPendingItems() {
+            fetch('{% url "purchasing:pending_po_items" %}')
+                .then(response => response.text())
+                .then(html => {
+                    const container = document.getElementById('pendingItemsContainer');
+                    if (container) {
+                        container.innerHTML = html;
+                    }
+                })
+                .catch(error => console.error('Error refreshing pending items:', error));
+        }
+
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Function to remove item
+        function removeItem(itemId) {
+            if (!confirm('Are you sure you want to remove this item?')) {
+                return;
+            }
+
+            const csrftoken = getCookie('csrftoken');
+            fetch(`{% url 'purchasing:remove_pending_item' 0 %}`.replace('0', itemId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    refreshPendingItems();
+                } else {
+                    alert('Error removing item: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error removing item');
+            });
+        }
+
+        // Function to clear brand items
+        function clearBrandItems(brand) {
+            if (!confirm('Are you sure you want to clear all items for this brand?')) {
+                return;
+            }
+
+            const csrftoken = getCookie('csrftoken');
+            fetch(`/purchasing/clear-brand-items/${encodeURIComponent(brand)}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    refreshPendingItems();
+                } else {
+                    alert(data.error || 'Error clearing items');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error clearing items');
+            });
+        }
+
+        // Function to create purchase order
+        function createPurchaseOrder(brand) {
+            const form = document.querySelector(`#po_form_${brand}`);
+            if (!form) {
+                console.error('Form not found for brand:', brand);
+                return;
+            }
+
+            const supplier = form.querySelector(`#supplier_${brand}`).value;
+            const warehouse = form.querySelector(`#warehouse_${brand}`).value;
+            const expectedDeliveryDate = form.querySelector(`#expected_delivery_date_${brand}`).value;
+            const notes = form.querySelector(`#notes_${brand}`).value;
+
+            if (!supplier || !warehouse || !expectedDeliveryDate) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const csrftoken = getCookie('csrftoken');
+            const formData = {
+                supplier: supplier,
+                warehouse: warehouse,
+                expected_delivery_date: expectedDeliveryDate,
+                notes: notes
+            };
+
+            fetch(`{% url "purchasing:create_po_from_pending" "BRAND" %}`.replace('BRAND', brand), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.redirect_url) {
+                        window.location.href = data.redirect_url;
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    alert('Error creating purchase order: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error creating purchase order');
+            });
+        }
+
+        // Make functions globally available
+        window.removeItem = removeItem;
+        window.clearBrandItems = clearBrandItems;
+        window.createPurchaseOrder = createPurchaseOrder;
+
+        // Check for success message and refresh
+        {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'success' and 'purchase order created' in message.message|lower %}
+                refreshPendingItems();
+            {% endif %}
+        {% endfor %}
+        {% endif %}
+    });
+</script>
+{% endblock %}

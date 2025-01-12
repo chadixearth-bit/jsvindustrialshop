@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load purchasing_extras %}
+
+{% block main_content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">Delivery #{{ delivery.id }}</h1>
+            <div class="flex space-x-4">
+                {% if user.customuser.role == 'admin' and delivery.status == 'pending_confirmation' %}
+                <a href="{% url 'purchasing:confirm_delivery' delivery.id %}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700">
+                    <i class="fas fa-check mr-2"></i>
+                    Confirm Delivery
+                </a>
+                {% endif %}
+                <a href="{% url 'purchasing:delivery_list' %}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to List
+                </a>
+            </div>
+        </div>
+
+        <!-- Delivery Details Card -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+            <div class="px-4 py-5 sm:px-6 bg-gradient-to-r from-blue-600 to-indigo-600">
+                <h3 class="text-lg leading-6 font-medium text-white">Delivery Details</h3>
+            </div>
+            <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                <dl class="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Purchase Order</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            <a href="{% url 'purchasing:view_purchase_order' delivery.purchase_order.id %}" 
+                               class="text-blue-600 hover:text-blue-900 hover:underline">
+                                #{{ delivery.purchase_order.id }}
+                            </a>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Status</dt>
+                        <dd class="mt-1">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if delivery.status == 'pending_delivery' %}bg-yellow-100 text-yellow-800
+                                {% elif delivery.status == 'pending_confirmation' %}bg-blue-100 text-blue-800
+                                {% elif delivery.status == 'confirmed' %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ delivery.get_status_display }}
+                            </span>
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Warehouse</dt>
+                        <dd class="mt-1 text-sm text-gray-900">{{ delivery.purchase_order.warehouse.name }}</dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Delivery Date</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if delivery.delivery_date %}
+                                {{ delivery.delivery_date|date:"F j, Y, g:i a" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Received By</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if delivery.received_by %}
+                                {{ delivery.received_by.customuser.display_name|default:delivery.received_by.username }}
+                            {% else %}
+                                None
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Received Date</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if delivery.received_date %}
+                                {{ delivery.received_date|date:"F j, Y, g:i a" }}
+                            {% else %}
+                                None
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Confirmed By</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if delivery.confirmed_by %}
+                                {{ delivery.confirmed_by.customuser.display_name|default:delivery.confirmed_by.username }}
+                            {% else %}
+                                None
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-sm font-medium text-gray-500">Confirmed Date</dt>
+                        <dd class="mt-1 text-sm text-gray-900">
+                            {% if delivery.confirmed_date %}
+                                {{ delivery.confirmed_date|date:"F j, Y, g:i a" }}
+                            {% else %}
+                                None
+                            {% endif %}
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Image Upload Section -->
+        {% if user.customuser.role == 'attendant' or user.customuser.role == 'manager' and delivery.status == 'pending_delivery' %}
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+            <div class="px-4 py-5 sm:px-6 bg-gradient-to-r from-green-600 to-teal-600">
+                <h3 class="text-lg leading-6 font-medium text-white">Upload Delivery Image</h3>
+            </div>
+            <div class="border-t border-gray-200 px-4 py-5 sm:px-6">
+                <form method="post" enctype="multipart/form-data" action="{% url 'purchasing:upload_delivery_image' delivery.id %}" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Delivery Image</label>
+                        <div class="mt-1 flex items-center">
+                            <input type="file" name="delivery_image" accept="image/*" required
+                                   class="py-2 px-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 block w-full text-sm">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Notes</label>
+                        <div class="mt-1">
+                            <textarea name="delivery_note" rows="3" 
+                                      class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md"
+                                      placeholder="Add any notes about the delivery..."></textarea>
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-upload mr-2"></i>
+                            Upload Image
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Delivery Image Display -->
+        {% if delivery.delivery_image %}
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
+            <div class="px-4 py-5 sm:px-6 bg-gradient-to-r from-purple-600 to-pink-600">
+                <h3 class="text-lg leading-6 font-medium text-white">Delivery Image</h3>
+            </div>
+            <div class="border-t border-gray-200">
+                <div class="p-4">
+                    <img src="{{ delivery.delivery_image.url }}" alt="Delivery Image" class="w-full rounded-lg shadow-lg">
+                    {% if delivery.delivery_note %}
+                    <div class="mt-4">
+                        <h4 class="text-sm font-medium text-gray-700">Notes:</h4>
+                        <p class="mt-1 text-sm text-gray-600">{{ delivery.delivery_note }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Delivery Items -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="px-4 py-5 sm:px-6 bg-gradient-to-r from-blue-600 to-indigo-600">
+                <h3 class="text-lg leading-6 font-medium text-white">Delivery Items</h3>
+            </div>
+            <div class="border-t border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in delivery.items.all %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.purchase_order_item.item_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.purchase_order_item.brand }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.purchase_order_item.model_name }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ item.quantity_delivered }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₱{{ item.purchase_order_item.unit_price|floatformat:2 }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">₱{{ item.purchase_order_item.unit_price|multiply:item.quantity_delivered|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
