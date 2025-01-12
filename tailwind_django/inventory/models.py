@@ -55,21 +55,23 @@ class InventoryItem(models.Model):
 
     class Meta:
         ordering = ['brand', 'model', 'item_name']
+        unique_together = [('brand', 'model', 'warehouse')]
 
     def clean(self):
         from django.core.exceptions import ValidationError
-        # Check if model already exists for this brand
-        if self.brand and self.model:
+        # Check if model already exists for this brand in the same warehouse
+        if self.brand and self.model and self.warehouse:
             existing_items = InventoryItem.objects.filter(
                 brand=self.brand,
-                model=self.model
+                model=self.model,
+                warehouse=self.warehouse
             )
             if self.pk:  # If this is an existing item
                 existing_items = existing_items.exclude(pk=self.pk)
             
             if existing_items.exists():
                 raise ValidationError({
-                    'model': f'An item with model "{self.model}" already exists for brand "{self.brand}".'
+                    'model': f'An item with model "{self.model}" already exists for brand "{self.brand}" in warehouse "{self.warehouse}".'
                 })
 
     @classmethod

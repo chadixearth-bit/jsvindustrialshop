@@ -12,6 +12,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterUniqueTogether(
             name="inventoryitem",
-            unique_together={("brand", "model")},
+            unique_together={("brand", "model", "warehouse")},
         ),
     ]
